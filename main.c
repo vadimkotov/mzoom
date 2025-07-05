@@ -61,7 +61,8 @@ int main(void) {
   real_t scalex = width / (real_t)SCREEN_WIDTH;
   real_t scaley = height / (real_t)SCREEN_HEIGHT;
 
-  bool zoom_pressed = false;
+  Texture2D texture = LoadTextureFromImage(GenImageColor(SCREEN_WIDTH, SCREEN_HEIGHT, BLACK));
+  Color buffer[SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Color)] = {};
 
   while (!WindowShouldClose()) {
     
@@ -89,22 +90,26 @@ int main(void) {
     
     BeginDrawing();
     ClearBackground(BLACK);
+    
+    for (int y = 0; y < SCREEN_HEIGHT; ++y) {
+      real_t imag = scaley * ((real_t)(SCREEN_HEIGHT-y-1) + 0.5L) + imag_min;
 
-    for (int x = 0; x < SCREEN_WIDTH; ++x) {
-      
-      real_t real = scalex * ((real_t)x + 0.5L) + real_min;
+      for (int x = 0; x < SCREEN_WIDTH; ++x) {
+        real_t real = scalex * ((real_t)x + 0.5L) + real_min;
 
-      for (int y = 0; y < SCREEN_HEIGHT; ++y) {
-
-        real_t imag = scaley * ((real_t)(SCREEN_HEIGHT-y-1) + 0.5L) + imag_min;
         real_t nu = mandelbrot(real, imag, max_iterations);
 
         if (nu > -1.0L) {
           int color = nu * 10.0L;
-          DrawPixel(x, y, ColorFromHSV(color, 0.8f, 0.8f));
+          buffer[y * SCREEN_WIDTH + x] = ColorFromHSV(color, 0.8f, 0.8f);
+        } else {
+          buffer[y * SCREEN_WIDTH + x] = BLACK;
         }
       }
     }
+
+    UpdateTexture(texture, buffer);
+    DrawTexture(texture, 0, 0, WHITE);
 
     EndDrawing();
   }
